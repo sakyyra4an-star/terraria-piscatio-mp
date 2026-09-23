@@ -1,0 +1,71 @@
+[package]
+name = "terraria-piscatio-automatica"
+version = "0.5.8-mp1"
+edition = "2024"
+# Голые функции (`#[unsafe(naked)]` + `naked_asm!`) стабильны с 1.88 —
+# на них держится детур managed-метода.
+rust-version = "1.88"
+authors = ["genius8loci @Genius_Loci"]
+description = "terraria piscatio automatica"
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/genius8loci/terraria-piscatio-automatica"
+homepage = "https://github.com/genius8loci/terraria-piscatio-automatica"
+keywords = ["terraria", "fishing", "hook", "d3d9", "clr"]
+categories = ["game-development"]
+publish = false
+
+[package.metadata.piscatio]
+target-game = "Terraria 1.4.5.8 (x86, .NET Framework 4 + XNA 4.0)"
+contact = "https://t.me/Genius_Loci"
+
+[lib]
+name = "piscatio"
+crate-type = ["cdylib"]
+
+[dependencies]
+# Распаковка XNB: контент Terraria сжат LZX.
+lzxd = "0.2.7"
+# Inline-детуры. `retour` не собирается под i686 на актуальном rustc.
+minhook = "0.9.0"
+serde = { version = "1.0.229", features = ["derive"] }
+toml = "1.1.4"
+
+[dependencies.windows]
+version = "0.62.2"
+features = [
+    "Win32_Foundation",
+    # Подключение к CLR игры и рефлексия.
+    "Win32_System_ClrHosting",
+    "Win32_System_Com",
+    "Win32_System_Ole",
+    "Win32_System_Variant",
+    # Оверлей.
+    "Win32_Graphics_Direct3D9",
+    # Ловушка на аварийное завершение и минидамп к ней.
+    "Win32_System_Diagnostics_Debug",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Kernel",
+    "Win32_Graphics_Gdi",
+    "Win32_System_Memory",
+    "Win32_UI_WindowsAndMessaging",
+    # Разрешение системного таймера: без него сон выдержки округляется
+    # до 15.6 мс и вместо 60 тиков в секунду выходит 32.
+    "Win32_Media",
+    # Служебное: модули, потоки, хоткеи, время для лога.
+    "Win32_System_LibraryLoader",
+    "Win32_System_SystemInformation",
+    "Win32_System_Threading",
+    "Win32_UI_Input_KeyboardAndMouse",
+]
+
+[build-dependencies]
+# Кладёт VERSIONINFO в PE, чтобы данные пакета были видны в свойствах DLL.
+winresource = "0.1"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+# Символы срезаем, таблица экспортов (DllMain / Start / Stop) остаётся.
+strip = true
