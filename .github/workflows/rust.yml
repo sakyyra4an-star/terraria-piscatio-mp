@@ -1,0 +1,30 @@
+name: Build DLL
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust 1.88
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.88.0
+          targets: i686-pc-windows-msvc
+
+      - name: Build 32-bit DLL
+        run: cargo build --release --target i686-pc-windows-msvc
+
+      - name: Upload DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: piscatio-dll
+          path: target/i686-pc-windows-msvc/release/piscatio.dll
